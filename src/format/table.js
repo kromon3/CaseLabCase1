@@ -1,4 +1,5 @@
 // Сборка строк для вывода в терминал. Модуль ничего не печатает сам — только возвращает текст.
+import { messages } from './messages.js';
 
 const UNIT_LABELS = { mm: 'мм', inch: 'дюйм' };
 
@@ -40,7 +41,14 @@ export function formatForecastTable(days, units = { temperature: '°C', precipit
   return [header, separator, ...rows].map(line).join('\n');
 }
 
-// Полный блок по городу: шапка и таблица
-export function formatReport({ place, days, units }) {
-  return [formatCityHeader(place), '', formatForecastTable(days, units)].join('\n');
+// Полный блок по городу: шапка, таблица и откуда взяты данные (сеть или кэш)
+export function formatReport({ report, fromCache, file }) {
+  const source = fromCache ? messages.cacheHit(file) : messages.reportSaved(file);
+  return [
+    formatCityHeader(report.place),
+    '',
+    formatForecastTable(report.days, report.units),
+    '',
+    source,
+  ].join('\n');
 }
