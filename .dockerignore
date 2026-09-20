@@ -1,0 +1,11 @@
+node_modules/
+reports/
+.env
+.git/
+.github/
+.idea/
+.vscode/
+docs/
+public/
+tests/
+*.log

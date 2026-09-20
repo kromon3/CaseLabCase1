@@ -1,30 +1,46 @@
-#!/usr/bin/env node
-/**
- * Точка входа утилиты «Погодный дайджест».
- *
- * Здесь нет ни сетевых запросов, ни работы с файлами, ни форматирования —
- * только оркестрация: разобрать аргументы, запустить сценарий, вернуть код выхода.
- *
- * Порядок сборки (модули появляются в соответствующих ветках feat/*):
- *   1. src/cli        — parseArgs + validateArgs
- *   2. src/api        — HTTP-клиент, геокодинг, прогноз
- *   3. src/services   — buildReports (параллельная обработка городов)
- *   4. src/storage    — сохранение отчёта и кэш
- *   5. src/errors     — единая обработка ошибок и код выхода 1
- */
+// Точка входа: разобрать аргументы, построить отчёты, вывести их, вернуть код выхода.
+import { parseArgs, buildHelpText } from './cli/args.js';
+import { validateArgs } from './cli/validate.js';
+import { buildReports } from './services/weatherService.js';
+import { formatReport } from './format/table.js';
+import { messages } from './format/messages.js';
+import {
+  toUserMessage,
+  fail,
+  registerGlobalHandlers,
+  EXIT_OK,
+  EXIT_ERROR,
+} from './errors/handler.js';
 
-const EXIT_OK = 0;
-const EXIT_ERROR = 1;
+async function main(argv) {
+  const parsed = parseArgs(argv);
+  if (parsed.help) {
+    console.log(buildHelpText());
+    return EXIT_OK;
+  }
 
-async function main() {
-  console.log('weather-digest: каркас проекта. Логика реализуется в ветках feat/*.');
-  return EXIT_OK;
+  const args = validateArgs(parsed);
+  const results = await buildReports(args.cities, { days: args.days, noCache: args.noCache });
+
+  // Отчёты — в stdout, ошибки по отдельным городам — в stderr
+  let failed = 0;
+  for (const result of results) {
+    if (result.error) {
+      failed += 1;
+      console.error(messages.cityFailed(result.city, toUserMessage(result.error)));
+    } else {
+      console.log(`${formatReport(result)}\n`);
+    }
+  }
+
+  console.log(messages.summary(results.length - failed, failed));
+  return failed === 0 ? EXIT_OK : EXIT_ERROR;
 }
 
-main()
+registerGlobalHandlers();
+
+main(process.argv.slice(2))
   .then((code) => {
     process.exitCode = code;
   })
-  .catch(() => {
-    process.exitCode = EXIT_ERROR;
-  });
+  .catch(fail);
