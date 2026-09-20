@@ -1,0 +1,44 @@
+{
+  "name": "weather-digest",
+  "version": "1.0.0",
+  "description": "Консольная утилита «Погодный дайджест» на Node.js: прогноз погоды по городам через открытый REST API Open-Meteo",
+  "type": "module",
+  "main": "src/index.js",
+  "engines": {
+    "node": ">=20"
+  },
+  "scripts": {
+    "start": "node src/index.js",
+    "start:env": "node --env-file=.env src/index.js",
+    "test": "node --test",
+    "lint": "eslint .",
+    "lint:fix": "eslint . --fix",
+    "format": "prettier --write .",
+    "format:check": "prettier --check .",
+    "check": "npm run lint && npm run format:check && npm test",
+    "docker:build": "docker build -t weather-digest ."
+  },
+  "keywords": [
+    "cli",
+    "weather",
+    "open-meteo",
+    "rest-api",
+    "nodejs"
+  ],
+  "author": "kromon3",
+  "license": "MIT",
+  "devDependencies": {
+    "@eslint/js": "^9.12.0",
+    "eslint": "^9.12.0",
+    "eslint-config-prettier": "^9.1.0",
+    "globals": "^15.11.0",
+    "prettier": "^3.3.3"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/kromon3/CaseLabCase1.git"
+  },
+  "files": [
+    "src"
+  ]
+}

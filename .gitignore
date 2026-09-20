@@ -1,0 +1,19 @@
+# зависимости
+node_modules/
+
+# артефакты работы утилиты
+reports/
+
+# локальная конфигурация
+.env
+
+# логи и мусор
+*.log
+npm-debug.log*
+coverage/
+.DS_Store
+Thumbs.db
+
+# IDE
+.idea/
+.vscode/
