@@ -3,16 +3,14 @@ import { parseArgs, buildHelpText } from './cli/args.js';
 import { validateArgs } from './cli/validate.js';
 import { buildReports } from './services/weatherService.js';
 import { formatReport } from './format/table.js';
-import { AppError } from './errors/AppError.js';
 import { messages } from './format/messages.js';
-
-const EXIT_OK = 0;
-const EXIT_ERROR = 1;
-
-// TODO(feat/error-handling): вынести в единый обработчик ошибок
-function toUserMessage(error) {
-  return error instanceof AppError ? error.message : 'Непредвиденная ошибка.';
-}
+import {
+  toUserMessage,
+  fail,
+  registerGlobalHandlers,
+  EXIT_OK,
+  EXIT_ERROR,
+} from './errors/handler.js';
 
 async function main(argv) {
   const parsed = parseArgs(argv);
@@ -29,21 +27,20 @@ async function main(argv) {
   for (const result of results) {
     if (result.error) {
       failed += 1;
-      console.error(`✖ ${result.city}: ${toUserMessage(result.error)}`);
+      console.error(messages.cityFailed(result.city, toUserMessage(result.error)));
     } else {
       console.log(`${formatReport(result)}\n`);
     }
   }
 
+  console.log(messages.summary(results.length - failed, failed));
   return failed === 0 ? EXIT_OK : EXIT_ERROR;
 }
+
+registerGlobalHandlers();
 
 main(process.argv.slice(2))
   .then((code) => {
     process.exitCode = code;
   })
-  .catch((error) => {
-    console.error(`Ошибка: ${toUserMessage(error)}`);
-    if (error instanceof AppError) console.error(messages.usage);
-    process.exitCode = EXIT_ERROR;
-  });
+  .catch(fail);
