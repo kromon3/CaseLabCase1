@@ -22,7 +22,7 @@ async function main(argv) {
   }
 
   const args = validateArgs(parsed);
-  const results = await buildReports(args.cities, { days: args.days });
+  const results = await buildReports(args.cities, { days: args.days, noCache: args.noCache });
 
   // Отчёты — в stdout, ошибки по отдельным городам — в stderr
   let failed = 0;
@@ -31,7 +31,7 @@ async function main(argv) {
       failed += 1;
       console.error(`✖ ${result.city}: ${toUserMessage(result.error)}`);
     } else {
-      console.log(`${formatReport(result.report)}\n`);
+      console.log(`${formatReport(result)}\n`);
     }
   }
 
