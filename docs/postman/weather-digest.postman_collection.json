@@ -1,0 +1,473 @@
+{
+  "info": {
+    "_postman_id": "3f9c0c62-6d5e-4f2a-9d1c-5b7e2a1c9f10",
+    "name": "Weather Digest — Open-Meteo",
+    "description": "Коллекция к консольной утилите «Погодный дайджест». Два связанных запроса: 1) геокодинг по названию города, 2) прогноз по полученным координатам. Значения вынесены в переменные коллекции: {{geocodingBaseUrl}}, {{forecastBaseUrl}}, {{city}}, {{lat}}, {{lon}}, {{days}}. Тест запроса Geocoding автоматически записывает lat/lon в переменные коллекции, поэтому запросы удобно запускать по порядку через Collection Runner.",
+    "schema": "https://schema.getpostman.com/json/collection/v2.1.0/collection.json"
+  },
+  "item": [
+    {
+      "name": "1. Geocoding — координаты по названию города",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Статус 200', () => pm.response.to.have.status(200));",
+              "pm.test('Ответ — JSON', () => pm.response.to.be.json);",
+              "",
+              "const body = pm.response.json();",
+              "if (Array.isArray(body.results) && body.results.length > 0) {",
+              "  const place = body.results[0];",
+              "  pm.test('Есть координаты', () => {",
+              "    pm.expect(place.latitude).to.be.a('number');",
+              "    pm.expect(place.longitude).to.be.a('number');",
+              "  });",
+              "  // Передаём координаты во второй запрос цепочки",
+              "  pm.collectionVariables.set('lat', String(place.latitude));",
+              "  pm.collectionVariables.set('lon', String(place.longitude));",
+              "  console.log(`Найдено: ${place.name}, ${place.country} (${place.latitude}, ${place.longitude})`);",
+              "} else {",
+              "  console.warn('Город не найден: в ответе нет поля results');",
+              "}"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{geocodingBaseUrl}}/v1/search?name={{city}}&count=1&language=ru&format=json",
+          "host": [
+            "{{geocodingBaseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "search"
+          ],
+          "query": [
+            {
+              "key": "name",
+              "value": "{{city}}",
+              "description": "Название города (кириллица допустима, кодируется автоматически)"
+            },
+            {
+              "key": "count",
+              "value": "1",
+              "description": "Сколько совпадений вернуть"
+            },
+            {
+              "key": "language",
+              "value": "ru",
+              "description": "Язык названий в ответе"
+            },
+            {
+              "key": "format",
+              "value": "json"
+            }
+          ]
+        },
+        "description": "Первый запрос цепочки: название города -> координаты. Если город не найден, API отвечает 200 без поля results."
+      },
+      "response": [
+        {
+          "name": "200 OK — город найден",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{geocodingBaseUrl}}/v1/search?name=Нижний Новгород&count=1&language=ru&format=json",
+              "host": [
+                "{{geocodingBaseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Нижний Новгород",
+                  "description": "Название города (кириллица допустима, кодируется автоматически)"
+                },
+                {
+                  "key": "count",
+                  "value": "1",
+                  "description": "Сколько совпадений вернуть"
+                },
+                {
+                  "key": "language",
+                  "value": "ru",
+                  "description": "Язык названий в ответе"
+                },
+                {
+                  "key": "format",
+                  "value": "json"
+                }
+              ]
+            },
+            "description": "Первый запрос цепочки: название города -> координаты. Если город не найден, API отвечает 200 без поля results."
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"results\": [\n    {\n      \"id\": 520555,\n      \"name\": \"Нижний Новгород\",\n      \"latitude\": 56.32867,\n      \"longitude\": 44.00205,\n      \"elevation\": 141,\n      \"feature_code\": \"PPLA\",\n      \"country_code\": \"RU\",\n      \"admin1_id\": 559838,\n      \"timezone\": \"Europe/Moscow\",\n      \"population\": 1259013,\n      \"country_id\": 2017370,\n      \"country\": \"Россия\",\n      \"admin1\": \"Нижегородская Область\"\n    }\n  ],\n  \"generationtime_ms\": 1.6833544\n}"
+        },
+        {
+          "name": "200 OK — город не найден (нет поля results)",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{geocodingBaseUrl}}/v1/search?name=Qwertyuiopville&count=1&language=ru&format=json",
+              "host": [
+                "{{geocodingBaseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "Qwertyuiopville",
+                  "description": "Название города (кириллица допустима, кодируется автоматически)"
+                },
+                {
+                  "key": "count",
+                  "value": "1",
+                  "description": "Сколько совпадений вернуть"
+                },
+                {
+                  "key": "language",
+                  "value": "ru",
+                  "description": "Язык названий в ответе"
+                },
+                {
+                  "key": "format",
+                  "value": "json"
+                }
+              ]
+            },
+            "description": "Первый запрос цепочки: название города -> координаты. Если город не найден, API отвечает 200 без поля results."
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"generationtime_ms\": 0.10418892\n}"
+        },
+        {
+          "name": "400 Bad Request — некорректный параметр count",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{geocodingBaseUrl}}/v1/search?name={{city}}&count=abc&language=ru&format=json",
+              "host": [
+                "{{geocodingBaseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "search"
+              ],
+              "query": [
+                {
+                  "key": "name",
+                  "value": "{{city}}",
+                  "description": "Название города (кириллица допустима, кодируется автоматически)"
+                },
+                {
+                  "key": "count",
+                  "value": "abc",
+                  "description": "Сколько совпадений вернуть"
+                },
+                {
+                  "key": "language",
+                  "value": "ru",
+                  "description": "Язык названий в ответе"
+                },
+                {
+                  "key": "format",
+                  "value": "json"
+                }
+              ]
+            },
+            "description": "Первый запрос цепочки: название города -> координаты. Если город не найден, API отвечает 200 без поля results."
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"error\": true,\n  \"reason\": \"Value was not of type 'Int' at path 'count'. Data found at 'count' was not Int.\"\n}"
+        }
+      ]
+    },
+    {
+      "name": "2. Forecast — прогноз по координатам",
+      "event": [
+        {
+          "listen": "test",
+          "script": {
+            "type": "text/javascript",
+            "exec": [
+              "pm.test('Статус 200', () => pm.response.to.have.status(200));",
+              "pm.test('Ответ — JSON', () => pm.response.to.be.json);",
+              "",
+              "const body = pm.response.json();",
+              "pm.test('Есть блок daily с нужными колонками', () => {",
+              "  pm.expect(body).to.have.property('daily');",
+              "  pm.expect(body.daily.time).to.be.an('array');",
+              "  pm.expect(body.daily.temperature_2m_max).to.be.an('array');",
+              "  pm.expect(body.daily.temperature_2m_min).to.be.an('array');",
+              "  pm.expect(body.daily.precipitation_sum).to.be.an('array');",
+              "});",
+              "pm.test('Число дней совпадает с forecast_days', () => {",
+              "  const days = Number(pm.collectionVariables.get('days'));",
+              "  pm.expect(body.daily.time.length).to.eql(days);",
+              "});"
+            ]
+          }
+        }
+      ],
+      "request": {
+        "method": "GET",
+        "header": [
+          {
+            "key": "Accept",
+            "value": "application/json"
+          }
+        ],
+        "url": {
+          "raw": "{{forecastBaseUrl}}/v1/forecast?latitude={{lat}}&longitude={{lon}}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&forecast_days={{days}}&timezone=auto",
+          "host": [
+            "{{forecastBaseUrl}}"
+          ],
+          "path": [
+            "v1",
+            "forecast"
+          ],
+          "query": [
+            {
+              "key": "latitude",
+              "value": "{{lat}}",
+              "description": "Широта из ответа геокодинга (results[0].latitude)"
+            },
+            {
+              "key": "longitude",
+              "value": "{{lon}}",
+              "description": "Долгота из ответа геокодинга (results[0].longitude)"
+            },
+            {
+              "key": "daily",
+              "value": "temperature_2m_max,temperature_2m_min,precipitation_sum"
+            },
+            {
+              "key": "forecast_days",
+              "value": "{{days}}",
+              "description": "Число дней прогноза, утилита допускает 1..7"
+            },
+            {
+              "key": "timezone",
+              "value": "auto"
+            }
+          ]
+        },
+        "description": "Второй запрос цепочки: координаты -> прогноз по дням. lat/lon подставляются из переменных, которые заполняет тест запроса Geocoding."
+      },
+      "response": [
+        {
+          "name": "200 OK — прогноз на 3 дня",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{forecastBaseUrl}}/v1/forecast?latitude={{lat}}&longitude={{lon}}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&forecast_days=3&timezone=auto",
+              "host": [
+                "{{forecastBaseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "forecast"
+              ],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "{{lat}}",
+                  "description": "Широта из ответа геокодинга (results[0].latitude)"
+                },
+                {
+                  "key": "longitude",
+                  "value": "{{lon}}",
+                  "description": "Долгота из ответа геокодинга (results[0].longitude)"
+                },
+                {
+                  "key": "daily",
+                  "value": "temperature_2m_max,temperature_2m_min,precipitation_sum"
+                },
+                {
+                  "key": "forecast_days",
+                  "value": "3",
+                  "description": "Число дней прогноза, утилита допускает 1..7"
+                },
+                {
+                  "key": "timezone",
+                  "value": "auto"
+                }
+              ]
+            },
+            "description": "Второй запрос цепочки: координаты -> прогноз по дням. lat/lon подставляются из переменных, которые заполняет тест запроса Geocoding."
+          },
+          "status": "OK",
+          "code": 200,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"latitude\": 56.3125,\n  \"longitude\": 44,\n  \"generationtime_ms\": 0.05841255187988281,\n  \"utc_offset_seconds\": 10800,\n  \"timezone\": \"Europe/Moscow\",\n  \"timezone_abbreviation\": \"GMT+3\",\n  \"elevation\": 128,\n  \"daily_units\": {\n    \"time\": \"iso8601\",\n    \"temperature_2m_max\": \"°C\",\n    \"temperature_2m_min\": \"°C\",\n    \"precipitation_sum\": \"mm\"\n  },\n  \"daily\": {\n    \"time\": [\n      \"2026-09-20\",\n      \"2026-09-21\",\n      \"2026-09-22\"\n    ],\n    \"temperature_2m_max\": [\n      20.1,\n      21.7,\n      23.3\n    ],\n    \"temperature_2m_min\": [\n      10.1,\n      11,\n      14.4\n    ],\n    \"precipitation_sum\": [\n      0,\n      0,\n      0\n    ]\n  }\n}"
+        },
+        {
+          "name": "400 Bad Request — forecast_days вне допустимого диапазона",
+          "originalRequest": {
+            "method": "GET",
+            "header": [
+              {
+                "key": "Accept",
+                "value": "application/json"
+              }
+            ],
+            "url": {
+              "raw": "{{forecastBaseUrl}}/v1/forecast?latitude={{lat}}&longitude={{lon}}&daily=temperature_2m_max,temperature_2m_min,precipitation_sum&forecast_days=99&timezone=auto",
+              "host": [
+                "{{forecastBaseUrl}}"
+              ],
+              "path": [
+                "v1",
+                "forecast"
+              ],
+              "query": [
+                {
+                  "key": "latitude",
+                  "value": "{{lat}}",
+                  "description": "Широта из ответа геокодинга (results[0].latitude)"
+                },
+                {
+                  "key": "longitude",
+                  "value": "{{lon}}",
+                  "description": "Долгота из ответа геокодинга (results[0].longitude)"
+                },
+                {
+                  "key": "daily",
+                  "value": "temperature_2m_max,temperature_2m_min,precipitation_sum"
+                },
+                {
+                  "key": "forecast_days",
+                  "value": "99",
+                  "description": "Число дней прогноза, утилита допускает 1..7"
+                },
+                {
+                  "key": "timezone",
+                  "value": "auto"
+                }
+              ]
+            },
+            "description": "Второй запрос цепочки: координаты -> прогноз по дням. lat/lon подставляются из переменных, которые заполняет тест запроса Geocoding."
+          },
+          "status": "Bad Request",
+          "code": 400,
+          "_postman_previewlanguage": "json",
+          "header": [
+            {
+              "key": "Content-Type",
+              "value": "application/json; charset=utf-8"
+            }
+          ],
+          "cookie": [],
+          "body": "{\n  \"reason\": \"Forecast days is invalid. Allowed range 0 to 16. Given 16.\",\n  \"error\": true\n}"
+        }
+      ]
+    }
+  ],
+  "variable": [
+    {
+      "key": "geocodingBaseUrl",
+      "value": "https://geocoding-api.open-meteo.com",
+      "type": "string"
+    },
+    {
+      "key": "forecastBaseUrl",
+      "value": "https://api.open-meteo.com",
+      "type": "string"
+    },
+    {
+      "key": "city",
+      "value": "Нижний Новгород",
+      "type": "string"
+    },
+    {
+      "key": "lat",
+      "value": "56.32867",
+      "type": "string"
+    },
+    {
+      "key": "lon",
+      "value": "44.00205",
+      "type": "string"
+    },
+    {
+      "key": "days",
+      "value": "3",
+      "type": "string"
+    }
+  ]
+}
